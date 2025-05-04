@@ -48,9 +48,7 @@ def visualize_matrix(matrix):
     rows, cols = matrix.shape
     plt.figure(figsize=(8, 8))
 
-    # Если размер матрицы не слишком большой, отображаем числа
     if rows <= 50 and cols <= 50:
-        # Конвертируем матрицу в массив и отображаем числа
         dense = matrix.toarray()
         plt.imshow(dense, cmap='viridis', interpolation='nearest')
         for i in range(rows):
@@ -61,10 +59,7 @@ def visualize_matrix(matrix):
         plt.show()
     else:
         print("Matrix too large. Showing corners and center.")
-        # Визуализируем только подматрицы, чтобы не перегружать память
         fig, axs = plt.subplots(2, 3, figsize=(15, 10))
-
-        # Отображаем углы и центр матрицы с числами
         for ax, submatrix, title in zip(
             [axs[0, 0], axs[0, 1], axs[0, 2], axs[1, 0], axs[1, 1]],
             [
@@ -82,7 +77,6 @@ def visualize_matrix(matrix):
                 for j in range(dense_submatrix.shape[1]):
                     ax.text(j, i, str(dense_submatrix[i, j]), ha='center', va='center', color='white', fontsize=8)
             ax.set_title(title)
-
         axs[1, 2].axis('off')
         plt.tight_layout()
         plt.show()
@@ -90,48 +84,59 @@ def visualize_matrix(matrix):
 
 def cyclic_shift_crs(matrix):
     rows, cols = matrix.shape
-
-    print("Матрица до сдвига:")
-    print_sparse_matrix(matrix)
-
     coo = matrix.tocoo()
     row = coo.row.astype(np.int64)
     col = coo.col.astype(np.int64)
 
-    # Вычисляем линейные индексы
     flat_pos = row * np.int64(cols) + col
     total_elements = np.int64(rows) * np.int64(cols)
 
-    # Циклический сдвиг всех ненулевых элементов на один вперёд
     new_pos = (flat_pos + 1) % total_elements
     new_row = new_pos // cols
     new_col = new_pos % cols
 
     shifted = csr_matrix((coo.data, (new_row, new_col)), shape=(rows, cols))
-
-    print("\nМатрица после сдвига:")
-    print_sparse_matrix(shifted)
-
     return shifted
 
 
 def performance_test():
-    sizes = [10, 100, 500, 1000, 10000]
-    for size in sizes:
-        density = 0.01
-        count = int(size * size * density)
-        rows = np.random.randint(0, size, count)
-        cols = np.random.randint(0, size, count)
-        data = np.random.randint(1, 100, count)
-        matrix = csr_matrix((data, (rows, cols)), shape=(size, size))
+    sizes = [10, 100, 1000, 10000]
+    densities = [0.1, 0.2, 0.3, 0.4, 0.5]
+    filename = "performance_results.txt"
 
-        start = time.time()
-        shifted = cyclic_shift_crs(matrix)
-        end = time.time()
+    with open(filename, "w") as f:
+        f.write("=== Performance Test Results ===\n")
+        for density in densities:
+            f.write(f"\n== Density: {density} ==\n")
+            for size in sizes:
+                try:
+                    count = int(size * size * density)
+                    if count == 0:
+                        result = f"{size}x{size} - The density is too low.\n"
+                        f.write(result)
+                        continue
 
-        mem_used = psutil.Process(os.getpid()).memory_info().rss / (1024**2)
+                    rows = np.random.randint(0, size, count)
+                    cols = np.random.randint(0, size, count)
+                    data = np.random.randint(1, 100, count)
+                    matrix = csr_matrix((data, (rows, cols)), shape=(size, size))
 
-        print(f"{size}x{size} - Time: {round((end - start)*1000, 2)} ms, Memory: {round(mem_used, 2)} MB")
+                    start = time.time()
+                    _ = cyclic_shift_crs(matrix)
+                    end = time.time()
+
+                    mem_used = psutil.Process(os.getpid()).memory_info().rss / 1024  # KB
+                    elapsed_us = round((end - start) * 1_000_000, 2)  # микросекунды
+                    result = f"{size}x{size} - Time: {elapsed_us} us, Memory: {round(mem_used, 2)} KB\n"
+                except MemoryError:
+                    result = f"{size}x{size} - Error memory\n"
+                except OverflowError:
+                    result = f"{size}x{size} - Overflow\n"
+
+                f.write(result)
+
+    print(f"Результаты сохранены в файл: {filename}")
+
 
 
 def manual_input():
@@ -217,6 +222,7 @@ def main():
             if matrix is not None:
                 try:
                     matrix = cyclic_shift_crs(matrix)
+                    print("Сдвиг выполнен.")
                 except MemoryError:
                     print("Недостаточно памяти для сдвига.")
                 except OverflowError:

@@ -1,0 +1,31 @@
+=== Performance Test Results ===
+
+== Density: 0.1 ==
+10x10 - Time: 999.93 us, Memory: 90148.0 KB
+100x100 - Time: 0.0 us, Memory: 90160.0 KB
+1000x1000 - Time: 5001.31 us, Memory: 92576.0 KB
+10000x10000 - Time: 390617.13 us, Memory: 359392.0 KB
+
+== Density: 0.2 ==
+10x10 - Time: 8001.33 us, Memory: 89720.0 KB
+100x100 - Time: 0.0 us, Memory: 89816.0 KB
+1000x1000 - Time: 9987.59 us, Memory: 95836.0 KB
+10000x10000 - Time: 722155.57 us, Memory: 622692.0 KB
+
+== Density: 0.3 ==
+10x10 - Time: 14003.52 us, Memory: 90428.0 KB
+100x100 - Time: 0.0 us, Memory: 90596.0 KB
+1000x1000 - Time: 12000.56 us, Memory: 97548.0 KB
+10000x10000 - Time: 1047739.74 us, Memory: 878168.0 KB
+
+== Density: 0.4 ==
+10x10 - Time: 19004.82 us, Memory: 89748.0 KB
+100x100 - Time: 587.22 us, Memory: 89960.0 KB
+1000x1000 - Time: 14004.23 us, Memory: 100364.0 KB
+10000x10000 - Time: 1367796.9 us, Memory: 1128820.0 KB
+
+== Density: 0.5 ==
+10x10 - Time: 24992.94 us, Memory: 89968.0 KB
+100x100 - Time: 0.0 us, Memory: 90044.0 KB
+1000x1000 - Time: 20990.37 us, Memory: 102908.0 KB
+10000x10000 - Time: 1765214.68 us, Memory: 1374044.0 KB
