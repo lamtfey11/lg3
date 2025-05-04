@@ -43,33 +43,42 @@ def visualize_matrix(matrix):
     rows, cols = matrix.shape
     plt.figure(figsize=(8, 8))
 
-    if rows <= 100 and cols <= 100:
-        plt.spy(matrix, markersize=1)
-        plt.title("Matrix Visualization")
+    # Если размер матрицы не слишком большой, отображаем числа
+    if rows <= 50 and cols <= 50:
+        # Конвертируем матрицу в массив и отображаем числа
+        dense = matrix.toarray()
+        plt.imshow(dense, cmap='viridis', interpolation='nearest')
+        for i in range(rows):
+            for j in range(cols):
+                plt.text(j, i, str(dense[i, j]), ha='center', va='center', color='white', fontsize=8)
+        plt.title("Matrix Visualization with Numbers")
+        plt.colorbar()
         plt.show()
     else:
         print("Matrix too large. Showing corners and center.")
-        dense = matrix.toarray()
+        # Визуализируем только подматрицы, чтобы не перегружать память
         fig, axs = plt.subplots(2, 3, figsize=(15, 10))
 
-        axs[0, 0].imshow(dense[:10, :10], cmap='viridis')
-        axs[0, 0].set_title('Top-left')
-
-        axs[0, 1].imshow(dense[:10, -10:], cmap='viridis')
-        axs[0, 1].set_title('Top-right')
-
-        center_r, center_c = rows // 2, cols // 2
-        axs[0, 2].imshow(dense[center_r-5:center_r+5, center_c-5:center_c+5], cmap='viridis')
-        axs[0, 2].set_title('Center')
-
-        axs[1, 0].imshow(dense[-10:, :10], cmap='viridis')
-        axs[1, 0].set_title('Bottom-left')
-
-        axs[1, 1].imshow(dense[-10:, -10:], cmap='viridis')
-        axs[1, 1].set_title('Bottom-right')
+        # Отображаем углы и центр матрицы с числами
+        for ax, submatrix, title in zip(
+            [axs[0, 0], axs[0, 1], axs[0, 2], axs[1, 0], axs[1, 1]],
+            [
+                matrix[:10, :10],
+                matrix[:10, -10:],
+                matrix[rows // 2 - 5:rows // 2 + 5, cols // 2 - 5:cols // 2 + 5],
+                matrix[-10:, :10],
+                matrix[-10:, -10:]
+            ],
+            ["Top-left", "Top-right", "Center", "Bottom-left", "Bottom-right"]
+        ):
+            dense_submatrix = submatrix.toarray()
+            ax.imshow(dense_submatrix, cmap='viridis')
+            for i in range(dense_submatrix.shape[0]):
+                for j in range(dense_submatrix.shape[1]):
+                    ax.text(j, i, str(dense_submatrix[i, j]), ha='center', va='center', color='white', fontsize=8)
+            ax.set_title(title)
 
         axs[1, 2].axis('off')
-
         plt.tight_layout()
         plt.show()
 
@@ -180,7 +189,8 @@ def main():
             elif mode == '2':
                 matrix = manual_input()
         elif choice == '2':
-            matrix = load_matrix()
+            file_path = input("Введите путь к файлу: ")
+            matrix = load_matrix(file_path)
             print("Загружена матрица.")
         elif choice == '3':
             if matrix is not None:
