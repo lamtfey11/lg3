@@ -100,8 +100,8 @@ def cyclic_shift_crs(matrix):
 
 
 def performance_test():
-    sizes = [10, 100, 1000, 10000]
-    densities = [0.1, 0.2, 0.3, 0.4, 0.5]
+    sizes = [100000]
+    densities = [0.1]
     filename = "performance_results.txt"
 
     with open(filename, "w") as f:
@@ -221,14 +221,26 @@ def main():
         elif choice == '6':
             if matrix is not None:
                 try:
+                    start = time.time()
+                    process = psutil.Process(os.getpid())
+                    mem_before = process.memory_info().rss
+
                     matrix = cyclic_shift_crs(matrix)
-                    print("Сдвиг выполнен.")
+
+                    mem_after = process.memory_info().rss
+                    end = time.time()
+
+                    elapsed_us = round((end - start) * 1_000_000, 2)
+                    mem_used_kb = round((mem_after - mem_before) / 1024, 2)
+
+                    print(f"Сдвиг выполнен. Время: {elapsed_us} мкс. Память: {mem_used_kb} KB.")
                 except MemoryError:
                     print("Недостаточно памяти для сдвига.")
                 except OverflowError:
                     print("Слишком большая матрица. Переполнение целочисленного значения.")
             else:
                 print("Матрица не загружена.")
+
         elif choice == '7':
             performance_test()
         elif choice == '8':
