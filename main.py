@@ -1,8 +1,3 @@
-#Дана разреженная матрица (CRS). Осуществить циклический сдвиг в матрице. Сдвинуть всю матрицу. 
-#В первой строке первый элемент переносится на второе место, второй элемент на третье и т.д.
-#Последний элемент в первой строке становиться первым элементом во второй строке.
-#Последний элемент в последней строке переноситься на первую строку на первое место.
-
 import pickle
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -39,14 +34,17 @@ def print_sparse_matrix(matrix):
         print_submatrix(0, 10, cols - 10, cols, "Верхний правый угол")
         print_submatrix(rows - 10, rows, 0, 10, "Нижний левый угол")
         print_submatrix(rows - 10, rows, cols - 10, cols, "Нижний правый угол")
-        r_mid = rows // 2
-        c_mid = cols // 2
-        print_submatrix(r_mid - 5, r_mid + 5, c_mid - 5, c_mid + 5, "Центр")
+
+        if rows >= 20:
+            print_submatrix(0, 10, cols // 2 - 5, cols // 2 + 5, "Середина первых 10 строк")
+            print_submatrix(rows - 10, rows, cols // 2 - 5, cols // 2 + 5, "Середина последних 10 строк")
+        else:
+            print_submatrix(0, rows, cols // 2 - 5, cols // 2 + 5, "Середина всех строк")
 
 
 def visualize_matrix(matrix):
     rows, cols = matrix.shape
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(18, 12))  # Увеличено для большего количества подграфиков
 
     if rows <= 50 and cols <= 50:
         dense = matrix.toarray()
@@ -58,26 +56,34 @@ def visualize_matrix(matrix):
         plt.colorbar()
         plt.show()
     else:
-        print("Matrix too large. Showing corners and center.")
-        fig, axs = plt.subplots(2, 3, figsize=(15, 10))
-        for ax, submatrix, title in zip(
-            [axs[0, 0], axs[0, 1], axs[0, 2], axs[1, 0], axs[1, 1]],
-            [
-                matrix[:10, :10],
-                matrix[:10, -10:],
-                matrix[rows // 2 - 5:rows // 2 + 5, cols // 2 - 5:cols // 2 + 5],
-                matrix[-10:, :10],
-                matrix[-10:, -10:]
-            ],
-            ["Top-left", "Top-right", "Center", "Bottom-left", "Bottom-right"]
-        ):
+        print("Matrix too large. Showing key sections.")
+        fig, axs = plt.subplots(3, 3, figsize=(18, 12))  # 3x3 grid
+
+        middle_rows_start = rows // 2 - 5
+        middle_rows_end = rows // 2 + 5
+        middle_cols_start = cols // 2 - 5
+        middle_cols_end = cols // 2 + 5
+
+        submatrices = [
+            (matrix[:10, :10], "Top-left"),
+            (matrix[:10, middle_cols_start:middle_cols_end], "Middle of Top Rows"),
+            (matrix[:10, -10:], "Top-right"),
+            (matrix[middle_rows_start:middle_rows_end, :10], "Left of Middle Rows"),
+            (matrix[middle_rows_start:middle_rows_end, middle_cols_start:middle_cols_end], "Center of Middle Rows"),
+            (matrix[middle_rows_start:middle_rows_end, -10:], "Right of Middle Rows"),
+            (matrix[-10:, :10], "Bottom-left"),
+            (matrix[-10:, middle_cols_start:middle_cols_end], "Middle of Bottom Rows"),
+            (matrix[-10:, -10:], "Bottom-right")
+        ]
+
+        for ax, (submatrix, title) in zip(axs.flatten(), submatrices):
             dense_submatrix = submatrix.toarray()
             ax.imshow(dense_submatrix, cmap='viridis')
             for i in range(dense_submatrix.shape[0]):
                 for j in range(dense_submatrix.shape[1]):
                     ax.text(j, i, str(dense_submatrix[i, j]), ha='center', va='center', color='white', fontsize=8)
             ax.set_title(title)
-        axs[1, 2].axis('off')
+
         plt.tight_layout()
         plt.show()
 
@@ -125,8 +131,8 @@ def performance_test():
                     _ = cyclic_shift_crs(matrix)
                     end = time.time()
 
-                    mem_used = psutil.Process(os.getpid()).memory_info().rss / 1024  # KB
-                    elapsed_us = round((end - start) * 1_000_000, 2)  # микросекунды
+                    mem_used = psutil.Process(os.getpid()).memory_info().rss / 1024
+                    elapsed_us = round((end - start) * 1_000_000, 2)
                     result = f"{size}x{size} - Time: {elapsed_us} us, Memory: {round(mem_used, 2)} KB\n"
                 except MemoryError:
                     result = f"{size}x{size} - Error memory\n"
@@ -136,7 +142,6 @@ def performance_test():
                 f.write(result)
 
     print(f"Результаты сохранены в файл: {filename}")
-
 
 
 def manual_input():
@@ -240,7 +245,6 @@ def main():
                     print("Слишком большая матрица. Переполнение целочисленного значения.")
             else:
                 print("Матрица не загружена.")
-
         elif choice == '7':
             performance_test()
         elif choice == '8':
